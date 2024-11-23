@@ -1,46 +1,68 @@
 package com.company;
 
-import com.company.Dao.BookingDao;
-import com.company.Dao.MoviesDao;
-import com.company.Dao.ShowtimesDao;
-import com.company.DaoImp.BookingDaoImp;
-import com.company.DaoImp.MoviesdaoImp;
-import com.company.DaoImp.ShowtimeDaoImp;
+import com.company.daoimp.BookingDaoImp;
+import com.company.daoimp.MoviesDaoImp;
+import com.company.daoimp.ShowtimeDaoImp;
 import com.company.model.Bookings;
 import com.company.model.Movies;
-import com.company.model.Showtimes;
+import com.company.model.ShowTimes;
+import com.company.service.MovieService;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.util.List;
+import java.util.Scanner;
 
 public class MovieBookingSystem {
-  private static Scanner sc=new Scanner(System.in);
-    private BookingDao bookingDao;
-    private MoviesDao moviesDao;
-    private ShowtimesDao showtimesDao;
+    private static final Scanner sc = new Scanner(System.in);
+    private final MovieService movieService;
 
     public MovieBookingSystem(Connection connection) {
-        this.bookingDao =new BookingDaoImp(connection);
-        this.moviesDao = new MoviesdaoImp(connection);
-        this.showtimesDao = new ShowtimeDaoImp(connection);
+        this.movieService = new MovieService(
+                new BookingDaoImp(connection),
+                new MoviesDaoImp(connection),
+                new ShowtimeDaoImp(connection)
+        );
     }
-    public void SystemStart(){
-        System.out.println("welcome to Online Movie Booking System..happy to book the Tickets..");
-        while(true){
-            System.out.println("*".repeat(160));
-            System.out.println("1,All movies: ");
-        System.out.println("2,Book a Ticket: ");
-        System.out.println("3,Cancel a ticket: ");
-        System.out.println("4,ViewedBookedTickets: ");
-        System.out.println("5,ExitSystem:");
-        System.out.println("please  Choose Above 4 Options");
 
-        int chose =sc.nextInt();
-        sc.nextLine();
+    public static void main(String[] args) {
+        Connection connection = null;
+        String url = "jdbc:mysql://localhost:3306/movieticketbooking";
+        String userName = "root";
+        String password = "root";
 
-            switch (chose){
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            connection = DriverManager.getConnection(url, userName, password);
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
+
+        MovieBookingSystem movieBookingSystem = new MovieBookingSystem(connection);
+        movieBookingSystem.systemStart();
+    }
+
+    public void systemStart() {
+        System.out.println("Welcome to Online Movie Booking System.. happy to book the tickets..");
+        while (true) {
+            System.out.println("*".repeat(20));
+            System.out.println("1 -> All movies");
+            System.out.println("2 -> Book a Ticket");
+            System.out.println("3 -> Cancel a ticket");
+            System.out.println("4 -> View Booked Tickets");
+            System.out.println("5 -> Available Seats Check");
+            System.out.println("6 -> Exit System");
+            System.out.println("Please choose one from above options");
+            System.out.println("*".repeat(20));
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
                 case 1:
                     movieDetails();
+                    break;
                 case 2:
                     bookTickets();
                     break;
@@ -48,115 +70,123 @@ public class MovieBookingSystem {
                     cancelTicket();
                     break;
                 case 4:
-                    viewBookedTicket();
+                    viewBookedTickets();
                     break;
                 case 5:
-                    ExitSystem();
+                    availableSeatsBasedOnTime();
+                    break;
+                case 6:
+                    exitSystem();
                     return;
                 default:
-                    System.out.println("please Provide valid Input...");
+                    System.out.println("Please provide a valid input...");
             }
-            sc.nextLine();
         }
     }
+
+    private void availableSeatsBasedOnTime() {
+        System.out.println("Enter showtimeId:");
+        int timeId = sc.nextInt();
+        System.out.println("Enter number of seats:");
+        int seats = sc.nextInt();
+
+        boolean successful = movieService.checkSeatAvailability(timeId, seats);
+        if (!successful) {
+            System.out.println("Selected seats are unavailable.");
+        } else {
+            System.out.println("Selected seats are available.");
+        }
+    }
+
     private void movieDetails() {
-        List<Movies> movies=moviesDao.getAllMovies();
-        for(Movies movies1:movies){
-            System.out.println(movies1.getMovieName());
+        List<Movies> movies = movieService.getAllMovies();
+        for (Movies movie : movies) {
+            System.out.println(movie.getMovieName());
         }
     }
+
     private void bookTickets() {
-        System.out.println("Please enter the MovieName: ");
-        String movieName=sc.next();
-        Movies movies=moviesDao.getMovieByName(movieName.toLowerCase());
-        if(movies==null){
-            System.out.println("Ivalid movie title or ticket count.please try again.");
-            return ;
-        }
-        System.out.println("movie is Available "+movieName+"showTimes: ");
-        List<Showtimes>showtimes=showtimesDao.getShowTimeMovie(movies.getMovieId());
-        if(showtimes.isEmpty()){
-            System.out.println("ShowTime Not Available in this Movie");
+        System.out.println("Please enter the Movie Name: ");
+        String movieName = sc.nextLine();
+        Movies movie = movieService.getMovieByName(movieName);
+        if (movie == null) {
+            System.out.println("Invalid movie name. Please try again.");
             return;
         }
-        for(Showtimes showtimes1:showtimes){
-            System.out.println("ShowTimings: - "+showtimes1.getShowtime());
+        System.out.println("Movie is available: " + movieName + " showtime:");
+        List<ShowTimes> showTimes = movieService.getShowTimesForMovie(movie.getMovieId());
+        if (showTimes.isEmpty()) {
+            System.out.println("No showtime available for this movie.");
+            return;
         }
 
-        System.out.println("enter the showtime: ");
-        String showtime =sc.next();
-
-        Showtimes showtimes2=showtimesDao.getShowTime(movies.getMovieId(),showtime);
-
-        if(showtimes2==null){
-            System.out.println("showTime Not Available...");
-            return ;
+        for (ShowTimes showtime : showTimes) {
+            System.out.println("Showtime: " + showtime.getShowTime());
         }
-        // booking  tickets like insert Query
-        System.out.println("enter the  userName: ");
-        String userName=sc.next();
-        System.out.println("enter the  contactInfo: ");
-        String contactInfo=sc.next();
-        System.out.println("enter the no of tickets: ");
-        int tickets=sc.nextInt();
-        System.out.println("enter the  seats: ");
-        int seats=sc.nextInt();
-         ResultSet seatsAvaialbility1=bookingDao.getSeatsAvaialbility(seats,showtimes2.getShowtime());
-         if(seatsAvaialbility1==null){
-             System.out.println("selected seats are unvailable .please choose again");
-         }
-         boolean successBooking=bookingDao.bookTickets(userName,contactInfo,tickets,seats);
-         if(successBooking ){
-             System.out.println("Tickets booked successfully.");
-         }else{
-             System.out.println("selected seats are unvailable .please choose again");
-         }
+
+        System.out.println("Enter the showtime (HH:MM:SS): ");
+        String timeStr = sc.nextLine();
+        Time time = Time.valueOf(timeStr);
+        ShowTimes showtime = movieService.getShowtimeByTime(movie.getMovieId(), time);
+
+        if (showtime == null) {
+            System.out.println("Showtime not available.");
+            return;
+        }
+
+        System.out.println("Enter your username: ");
+        String userName = sc.nextLine();
+        System.out.println("Enter your contact information: ");
+        String contactInfo = sc.nextLine();
+        System.out.println("Enter the number of tickets: ");
+        int tickets = sc.nextInt();
+        System.out.println("Enter the number of seats: ");
+        int seats = sc.nextInt();
+
+        boolean seatsAvailable = movieService.checkSeatAvailability(showtime.getShowTimeId(), seats);
+        boolean success = movieService.bookTickets(showtime.getShowTimeId(), movie.getMovieId(), userName, contactInfo, tickets, seats);
+
+        if (seatsAvailable && success) {
+            System.out.println("Tickets booked successfully.");
+        } else {
+            System.out.println("Selected seats are unavailable. Please try again.");
+        }
     }
+
     private void cancelTicket() {
-        System.out.println("please given the BookingId ");
-        int bookingId=sc.nextInt();
-        boolean Success=bookingDao.cancelTicket(bookingId);
-        if(Success){
-            System.out.println("Booking Cancelled successfully.");
+        System.out.println("Please provide the Booking ID: ");
+        int bookingId = sc.nextInt();
+        boolean success = movieService.cancelBooking(bookingId);
+        if (success) {
+            System.out.println("Booking cancelled successfully.");
+        } else {
+            System.out.println("Invalid Booking ID. Please try again.");
         }
-        else {
-            System.out.println("Invalid Booking Id.Please try again.");
-        }
+    }
 
-    }
-    private void viewBookedTicket() {
-        System.out.println("enter the movieId: ");
-        int movieId=sc.nextInt();
-        List<Bookings> bookingsList=bookingDao.viewBookingTikets(movieId);
-        if(bookingsList.isEmpty()){
-            System.out.println("No bookings available..");
+    private void viewBookedTickets() {
+        System.out.println("Enter the movie ID: ");
+        int movieId = sc.nextInt();
+        List<Bookings> bookingsList = movieService.viewBookings(movieId);
+        if (bookingsList.isEmpty()) {
+            System.out.println("No bookings available.");
+        } else {
+            for (Bookings booking : bookingsList) {
+                System.out.printf("|Booking ID: %-5d| Movie: %-7s | Showtime: %-7s | Seats: %-3d | Tickets: %-3d | User: %-8s | Contact Info: %-9s|\n",
+                        booking.getBookingId(),
+                        booking.getMovieName(),
+                        booking.getShowTime(),
+                        booking.getSeats(),
+                        booking.getTickets(),
+                        booking.getUserName(),
+                        booking.getContactInfo());
+            }
         }
-        for (Bookings bookings:bookingsList){
-            System.out.printf("|bookingID: %-2d|MovieTitle:%-5s |showtimes: %-7s|seats: %-2s|tickets:%-2d"+
-                            "|userName: %-5s |contact_info: %-3s|",bookings.getBookingId(),
-                    bookings.getMovieName(),bookings.getShowTime()
-                    ,bookings.getSeats()
-                    ,bookings.getTickets()
-                    ,bookings.getUsername()
-                    ,bookings.getContactInfo());
-        }
-        System.out.println();
     }
-    private void ExitSystem() {
-        System.out.println("Exit The Application");
+
+    private void exitSystem() {
+        System.out.println("Exiting the application.");
     }
-    public static void main(String[] args) {
-        Connection connection=null;
-       String url="jdbc:mysql://localhost:3306/movieticketbooking";
-       String userName="root";
-       String password="root";
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-             connection = DriverManager.getConnection(url,userName,password);         ;
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-        }
-   MovieBookingSystem movieBookingSystem=new MovieBookingSystem(connection);
-        movieBookingSystem.SystemStart();
-    }
+
+
 }

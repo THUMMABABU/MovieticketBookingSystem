@@ -2,18 +2,18 @@ package com.company.model;
 
 public class Bookings {
     public int bookingId;
-    public  int showtimeId;
-    public int movieId ;
-    public String username;
+    public int showTimeId;
+    public int movieId;
+    public String userName;
     public String contactInfo;
     public int tickets;
     public int seats;
-    public  String movieName;
-    public  String ShowTime;
+    public String movieName;
+    public String showTime;
 
-    public Bookings(int bookingId, String username, String contactInfo, int tickets, int seats) {
+    public Bookings(int bookingId, String userName, String contactInfo, int tickets, int seats) {
         this.bookingId = bookingId;
-        this.username = username;
+        this.userName = userName;
         this.contactInfo = contactInfo;
         this.tickets = tickets;
         this.seats = seats;
@@ -28,11 +28,11 @@ public class Bookings {
     }
 
     public String getShowTime() {
-        return ShowTime;
+        return showTime;
     }
 
-    public void setShowTime(String showTime) {
-        ShowTime = showTime;
+    public void setShowTime(String showtime) {
+        this.showTime = showtime;
     }
 
     public int getBookingId() {
@@ -44,11 +44,11 @@ public class Bookings {
     }
 
     public int getShowtimeId() {
-        return showtimeId;
+        return showTimeId;
     }
 
     public void setShowtimeId(int showtime) {
-        this.showtimeId = showtimeId;
+        this.showTimeId = showTimeId;
     }
 
     public int getMovieId() {
@@ -59,12 +59,12 @@ public class Bookings {
         this.movieId = movieId;
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getContactInfo() {

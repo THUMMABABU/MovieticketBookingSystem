@@ -1,9 +1,9 @@
 package com.company.model;
 
 public class Movies {
-    public int movieId ;
-    public  String movieName;
-    public int availableTickets ;
+    public int movieId;
+    public String movieName;
+    public int availableTickets;
 
     public Movies(int movieId, String movieName, int availableTickets) {
         this.movieId = movieId;
@@ -35,7 +35,7 @@ public class Movies {
         this.availableTickets = availableTickets;
     }
 
-    public  String toString(){
-        return "movieId: "+movieId+"movieName: "+movieName+"availableTickets: "+availableTickets;
+    public String toString() {
+        return "movieId: " + movieId + "movieName: " + movieName + "availableTickets: " + availableTickets;
     }
 }
