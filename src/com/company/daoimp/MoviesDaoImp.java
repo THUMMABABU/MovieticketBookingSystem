@@ -75,5 +75,4 @@ public class MoviesDaoImp implements MoviesDao {
         return moviesArrayList;
     }
 
-
 }

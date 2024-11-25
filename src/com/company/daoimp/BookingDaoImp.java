@@ -124,5 +124,3 @@ public class BookingDaoImp implements BookingDao {
         return bookingsArrayList;
     }
 }
-
-
