@@ -11,6 +11,9 @@ public class Bookings {
     public String movieName;
     public String showTime;
 
+    public Bookings() {
+    }
+
     public Bookings(int bookingId, String userName, String contactInfo, int tickets, int seats) {
         this.bookingId = bookingId;
         this.userName = userName;

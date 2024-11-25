@@ -14,10 +14,9 @@ public class MoviesDaoImp implements MoviesDao {
 
     private static final String GET_MOVIE_QUERY = "SELECT * FROM movies WHERE movie_name=?";
     private static final String GET_ALL_MOVIE = "SELECT * FROM movies";
-    private final Connection connection;
-
     // Logger initialization
     private static final Logger logger = Logger.getLogger(MoviesDaoImp.class.getName());
+    private final Connection connection;
 
     public MoviesDaoImp(Connection connection) {
         this.connection = connection;
@@ -75,4 +74,6 @@ public class MoviesDaoImp implements MoviesDao {
         }
         return moviesArrayList;
     }
+
+
 }

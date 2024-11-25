@@ -15,10 +15,9 @@ public class ShowtimeDaoImp implements ShowTimesDao {
     private static final String GET_SHOWTIME_QUERY = "SELECT * FROM showtimes WHERE movie_id=? and showtime=? ";
     private static final String GET_SHOWTIME_MOVIE_QUERY = "SELECT * FROM showtimes WHERE movie_id=?";
     private static final String GET_SHOW_TIME_SEATS = "SELECT m.available_tickets FROM showtimes s JOIN movies m ON  s.movie_id=m.movie_id WHERE showtime_id=?";
-    private final Connection connection;
-
     // Logger initialization
     private static final Logger logger = Logger.getLogger(ShowtimeDaoImp.class.getName());
+    private final Connection connection;
 
     public ShowtimeDaoImp(Connection connection) {
         this.connection = connection;
@@ -43,7 +42,7 @@ public class ShowtimeDaoImp implements ShowTimesDao {
         } catch (SQLException e) {
             // Log the error with stack trace
             logger.log(Level.SEVERE, "Error occurred while retrieving showtime for Movie ID: " + movieId + ", Showtime: " + showtime, e);
-            throw  new CustomException("Error occurred while retrieving showtime and MovieId:"+e.getMessage());
+            throw new CustomException("Error occurred while retrieving showtime and MovieId:" + e.getMessage());
         }
         return showtimes;
     }
@@ -64,7 +63,7 @@ public class ShowtimeDaoImp implements ShowTimesDao {
         } catch (SQLException e) {
             // Log error while fetching showtimes for movie
             logger.log(Level.SEVERE, "Error occurred while retrieving showtime for Movie ID: " + movieId, e);
-            throw  new CustomException("Error occurred while seat availability:"+e.getMessage());
+            throw new CustomException("Error occurred while seat availability:" + e.getMessage());
         }
         return showTimesArrayList;
     }
@@ -83,7 +82,7 @@ public class ShowtimeDaoImp implements ShowTimesDao {
                 if (isAvailable) {
                     logger.log(Level.INFO, "Sufficient seats available. Requested, Available, ShowtimeID");
                 } else {
-                    logger.log(Level.WARNING, "Insufficient seats. Requested,Available,ShowtimeID" );
+                    logger.log(Level.WARNING, "Insufficient seats. Requested,Available,ShowtimeID");
                 }
 
                 return isAvailable;
@@ -91,8 +90,10 @@ public class ShowtimeDaoImp implements ShowTimesDao {
         } catch (SQLException e) {
             // Log error while checking seat availability
             logger.log(Level.SEVERE, "Error occurred while checking seat availability for Showtime ID: " + showtimeId, e);
-            throw  new CustomException("Error occurred while seat availability:"+e.getMessage());
+            throw new CustomException("Error occurred while seat availability:" + e.getMessage());
         }
         return false;
     }
+
+
 }

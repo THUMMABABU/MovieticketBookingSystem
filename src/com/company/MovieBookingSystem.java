@@ -7,10 +7,9 @@ import com.company.model.Bookings;
 import com.company.model.Movies;
 import com.company.model.ShowTimes;
 import com.company.service.MovieService;
+import com.company.utils.DbConnections;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.util.List;
 import java.util.Scanner;
@@ -19,7 +18,9 @@ public class MovieBookingSystem {
     private static final Scanner sc = new Scanner(System.in);
     private final MovieService movieService;
 
-    public MovieBookingSystem(Connection connection) {
+    public MovieBookingSystem() {
+        DbConnections db = new DbConnections(); // Using the DbConnections class
+        Connection connection = db.getConnection();
         this.movieService = new MovieService(
                 new BookingDaoImp(connection),
                 new MoviesDaoImp(connection),
@@ -28,19 +29,7 @@ public class MovieBookingSystem {
     }
 
     public static void main(String[] args) {
-        Connection connection = null;
-        String url = "jdbc:mysql://localhost:3306/movieticketbooking";
-        String userName = "root";
-        String password = "root";
-
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(url, userName, password);
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-        }
-
-        MovieBookingSystem movieBookingSystem = new MovieBookingSystem(connection);
+        MovieBookingSystem movieBookingSystem = new MovieBookingSystem();
         movieBookingSystem.systemStart();
     }
 
@@ -187,6 +176,4 @@ public class MovieBookingSystem {
     private void exitSystem() {
         System.out.println("Exiting the application.");
     }
-
-
 }

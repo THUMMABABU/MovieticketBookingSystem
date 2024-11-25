@@ -5,6 +5,9 @@ public class Movies {
     public String movieName;
     public int availableTickets;
 
+    public Movies() {
+    }
+
     public Movies(int movieId, String movieName, int availableTickets) {
         this.movieId = movieId;
         this.movieName = movieName;

@@ -42,10 +42,11 @@ public class MovieService {
     }
 
     public boolean cancelBooking(int bookingId) {
+
         return bookingDao.cancelTicket(bookingId);
 
-
     }
+
 
     public List<Bookings> viewBookings(int movieId) {
         return bookingDao.viewBookingTickets(movieId);
@@ -53,6 +54,7 @@ public class MovieService {
 
     public ShowTimes getShowtimeByTime(int movieId, Time showTime) {
         return showTimesDao.getShowTime(movieId, showTime);
+
     }
 
 

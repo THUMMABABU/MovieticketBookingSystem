@@ -22,6 +22,9 @@ public class BookingDaoImp implements BookingDao {
                     "b.seats,b.tickets,b.user_name,\n" +
                     "b.contact_info FROM (bookings b join movies m ON b.movie_id=m.movie_id\n" +
                     " JOIN showtimes s ON b.showtime_id=s.showtime_id) WHERE  m.movie_id=?";
+    private static final String DECREASE_AVAILABLE_TICKETS = "UPDATE movies SET available_tickets = available_tickets - ? WHERE movie_id = ?";
+    private static final String INCREASE_AVAILABLE_TICKETS = "UPDATE movies SET available_tickets = available_tickets + ? WHERE movie_id = ?";
+    private static final String GET_BOOKING_DETAILS = "SELECT tickets, movie_id FROM bookings WHERE booking_id=?";
     private static final Logger logger = Logger.getLogger(BookingDaoImp.class.getName()); // Logger initialization
     private final Connection connection;
 
@@ -29,50 +32,60 @@ public class BookingDaoImp implements BookingDao {
         this.connection = connection;
     }
 
-    @Override
-    public boolean bookTickets(int showtimeId, int movieId, String userName, String contactInfo, int tickets, int seats) {
-        PreparedStatement preparedStatement = null;
-        try {
-            preparedStatement = connection.prepareStatement(BOOKING_TICKETS);
-            preparedStatement.setInt(1, showtimeId);
-            preparedStatement.setInt(2, movieId);
-            preparedStatement.setString(3, userName);
-            preparedStatement.setString(4, contactInfo);
-            preparedStatement.setInt(5, tickets);
-            preparedStatement.setInt(6, seats);
-            int result = preparedStatement.executeUpdate();
 
-            if (result > 0) {
-                logger.log(Level.INFO, "Booking successful for user, MovieID,ShowtimeID, Tickets. Seats");
-                return true;
-            } else {
-                logger.log(Level.WARNING, "Booking failed for user, Movie ID: {1}, Showtime ID: {2}",
-                        new Object[]{userName, movieId, showtimeId});
+    public boolean bookTickets(int showtimeId, int movieId, String userName, String contactInfo, int tickets, int seats) {
+        try (
+                PreparedStatement bookingStmt = connection.prepareStatement(BOOKING_TICKETS);
+                PreparedStatement updateTicketsStmt = connection.prepareStatement(DECREASE_AVAILABLE_TICKETS)
+        ) {
+            // Insert booking record
+            bookingStmt.setInt(1, showtimeId);
+            bookingStmt.setInt(2, movieId);
+            bookingStmt.setString(3, userName);
+            bookingStmt.setString(4, contactInfo);
+            bookingStmt.setInt(5, tickets);
+            bookingStmt.setInt(6, seats);
+
+            if (bookingStmt.executeUpdate() > 0) {
+                // Decrease available tickets
+                updateTicketsStmt.setInt(1, tickets);
+                updateTicketsStmt.setInt(2, movieId);
+                return updateTicketsStmt.executeUpdate() > 0;
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error occurred while booking tickets for user, MovieID,ShowtimeID");
-           // logger.log(Level.SEVERE, "SQLException: " + e.getMessage(), e);
-            throw new CustomException(e.getMessage());
+            logger.log(Level.SEVERE, "Error occurred while booking tickets.", e);
+            throw new CustomException("Booking failed: " + e.getMessage());
         }
         return false;
     }
 
     @Override
     public boolean cancelTicket(int bookingId) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement(CANCEL_TICKET);
-            preparedStatement.setInt(1, bookingId);
-            int result = preparedStatement.executeUpdate();
+        try (
+                PreparedStatement getBookingDetailsStmt = connection.prepareStatement(GET_BOOKING_DETAILS);
+                PreparedStatement cancelStmt = connection.prepareStatement(CANCEL_TICKET);
+                PreparedStatement updateTicketsStmt = connection.prepareStatement(INCREASE_AVAILABLE_TICKETS)
+        ) {
 
-            if (result > 0) {
-                logger.log(Level.INFO, "Cancellation successful for bookingID");
-                return true;
-            } else {
-                logger.log(Level.WARNING, "Cancellation failed for booking ID:", bookingId);
+            getBookingDetailsStmt.setInt(1, bookingId);
+            ResultSet resultSet = getBookingDetailsStmt.executeQuery();
+
+            if (resultSet.next()) {
+                int tickets = resultSet.getInt("tickets");
+                int movieId = resultSet.getInt("movie_id");
+
+
+                cancelStmt.setInt(1, bookingId);
+                if (cancelStmt.executeUpdate() > 0) {
+
+                    updateTicketsStmt.setInt(1, tickets);
+                    updateTicketsStmt.setInt(2, movieId);
+                    return updateTicketsStmt.executeUpdate() > 0;
+                }
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error occurred while canceling booking ID: " + bookingId, e);
-            throw new CustomException("Error occurred while canceling tickets: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error occurred while canceling booking.", e);
+            throw new CustomException("Cancellation failed: " + e.getMessage());
         }
         return false;
     }
@@ -100,14 +113,16 @@ public class BookingDaoImp implements BookingDao {
                 bookings.setShowTime(showtime);
                 bookingsArrayList.add(bookings);
 
-                // Log each booking found
+
                 logger.log(Level.INFO, "Viewing booking,Movie, Showtime, User Tickets, Seats");
             }
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error occurred while viewing tickets for Movie ID: " + movieId, e);
-            throw  new CustomException("Error occurred while viewBookingTickets:"+e.getMessage());
+            throw new CustomException("Error occurred while viewBookingTickets:" + e.getMessage());
         }
         return bookingsArrayList;
     }
 }
+
+

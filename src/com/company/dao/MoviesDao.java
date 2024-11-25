@@ -10,5 +10,4 @@ public interface MoviesDao {
     List<Movies> getAllMovies();
 
 
-
 }

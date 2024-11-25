@@ -10,4 +10,6 @@ public interface BookingDao {
     boolean cancelTicket(int bookingId);
 
     List<Bookings> viewBookingTickets(int movieId);
+
+
 }
